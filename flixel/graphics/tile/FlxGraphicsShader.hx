@@ -27,10 +27,15 @@ class FlxGraphicsShader extends GraphicsShader
 	@:glFragmentHeader("
 		uniform bool hasTransform;
 		uniform bool hasColorTransform;
+		uniform bool isTexture;
 
 		vec4 flixel_texture2D(sampler2D bitmap, vec2 coord)
 		{
 			vec4 color = texture2D(bitmap, coord);
+
+			if (isTexture)
+				color.rgb *= color.a;
+
 			if (!hasTransform)
 			{
 				return color;

@@ -25,10 +25,10 @@ class FlxSwipe
 	public var radians(get, never):Float;
 	public var duration(get, never):Float;
 
-	var _startTimeInTicks:Int;
-	var _endTimeInTicks:Int;
+	var _startTimeInTicks:Float;
+	var _endTimeInTicks:Float;
 
-	function new(ID:Int, StartPosition:FlxPoint, EndPosition:FlxPoint, StartTimeInTicks:Int)
+	function new(ID:Int, StartPosition:FlxPoint, EndPosition:FlxPoint, StartTimeInTicks:Float)
 	{
 		this.ID = ID;
 		startPosition = StartPosition;
