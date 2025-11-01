@@ -120,7 +120,8 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem>
 		shader.bitmap.filter = (camera.antialiasing || antialiasing) ? LINEAR : NEAREST;
 		shader.alpha.value = alphas;
 		var isTexture:Bool = !graphics.bitmap.readable;
-		shader.isTexture.value = [isTexture];
+		if (shader.isTexture != null)
+			shader.isTexture.value = [isTexture];
 
 		if (colored || hasColorOffsets)
 		{
