@@ -74,7 +74,7 @@ class FlxGraphicsShader extends GraphicsShader
 		void main(void)
 		{
 			gl_FragColor = flixel_texture2D(bitmap, openfl_TextureCoordv);
-		}")
+		}", true)
 	public function new()
 	{
 		super();
