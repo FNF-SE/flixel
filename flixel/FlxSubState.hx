@@ -70,7 +70,9 @@ class FlxSubState extends FlxState
 		}
 		else
 		{
-			_bgSprite.draw();
+			if (_bgSprite != null && _bgSprite.visible)
+				_bgSprite.draw();
+
 		}
 
 		// Now draw all children

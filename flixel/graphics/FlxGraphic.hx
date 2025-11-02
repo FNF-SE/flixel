@@ -470,8 +470,6 @@ class FlxGraphic implements IFlxDestroyable
 
 		shader = null;
 
-		key = null;
-		assetsKey = null;
 		assetsClass = null;
 		imageFrame = null; // no need to dispose _imageFrame since it exists in imageFrames
 
@@ -498,8 +496,11 @@ class FlxGraphic implements IFlxDestroyable
 	{
 		if (collection.type != null)
 		{
-			var collections:Array<Dynamic> = getFramesCollections(collection.type);
-			collections.push(collection);
+			final collections = getFramesCollections(collection.type);
+			if (collections.contains(collection))
+				FlxG.log.warn('Attempting to add already added collection');
+			else
+				collections.push(collection);
 		}
 	}
 
