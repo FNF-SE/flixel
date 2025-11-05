@@ -123,9 +123,6 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem>
 		shader.bitmap.input = graphics.bitmap;
 		shader.bitmap.filter = (camera.antialiasing || antialiasing) ? LINEAR : NEAREST;
 		shader.alpha.value = alphas;
-		var isTexture:Bool = !graphics.bitmap.readable;
-		if (shader.isTexture != null)
-			shader.isTexture.value = [isTexture];
 
 		if (colored || hasColorOffsets)
 		{
@@ -135,6 +132,8 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem>
 
 		setParameterValue(shader.hasTransform, true);
 		setParameterValue(shader.hasColorTransform, colored || hasColorOffsets);
+		@:privateAccess // I'm lazy
+		setParameterValue(shader.premultiplyAlpha, !shader.bitmap.input.readable && shader.bitmap.input.__texture != null && shader.bitmap.input.__texture.__premultiplyAlpha);
 
 		#if (openfl > "8.7.0")
 		camera.canvas.graphics.overrideBlendMode(blend);

@@ -73,6 +73,8 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem>
 
 		setParameterValue(shader.hasTransform, true);
 		setParameterValue(shader.hasColorTransform, colored || hasColorOffsets);
+		@:privateAccess // I'm lazy
+		setParameterValue(shader.premultiplyAlpha, !shader.bitmap.input.readable && shader.bitmap.input.__texture != null && shader.bitmap.input.__texture.__premultiplyAlpha);
 
 		#if (openfl > "8.7.0")
 		camera.canvas.graphics.overrideBlendMode(blend);
