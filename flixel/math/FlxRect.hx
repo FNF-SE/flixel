@@ -452,6 +452,33 @@ class FlxRect implements IFlxPooled
 	}
 
 	/**
+	 * Resizes `this` instance so that it fits within the intersection of the this and
+	 * the target rect. If there is no overlap between them, The result is an empty rect.
+	 *
+	 * @param   rect    Rectangle to check intersection against
+	 * @return  This rect, useful for chaining
+	 * @since 5.9.0
+	 */
+	public function clipTo(rect:FlxRect):FlxRect
+	{
+		return rect.intersection(this, this);
+	}
+	
+	/**
+	 * The middle point of this rect
+	 * 
+	 * @param   point  The point to hold the result, if `null` a new one is created
+	 * @since 5.9.0
+	 */
+	public function getMidpoint(?point:FlxPoint)
+	{
+		if (point == null)
+			point = FlxPoint.get();
+		
+		return point.set(x + 0.5 * width, y + 0.5 * height);
+	}
+
+	/**
 	 * Convert object to readable string name. Useful for debugging, save games, etc.
 	 */
 	public inline function toString():String
