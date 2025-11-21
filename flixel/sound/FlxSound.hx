@@ -898,7 +898,7 @@ class FlxSound extends FlxBasic {
 			return _time;
 	}
 	function get_time():Float {
-		if (_source == null || /*AudioManager.context == null*/) return _time;
+		if (_source == null /*|| AudioManager.context == null*/) return _time;
 
 		final sourceTime = _source.currentTime - _source.offset - _offset;
 		if (!_source.playing || _realPitch <= 0) {
