@@ -951,7 +951,7 @@ class FlxSound extends FlxBasic {
 	override function toString():String {
 		return FlxStringUtil.getDebugString([
 			LabelValuePair.weak("playing", playing),
-			LabelValuePair.weak("time", _time),
+			LabelValuePair.weak("time", time),
 			LabelValuePair.weak("length", length),
 			LabelValuePair.weak("volume", volume),
 			LabelValuePair.weak("pitch", pitch)
