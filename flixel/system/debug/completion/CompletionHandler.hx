@@ -156,7 +156,9 @@ class CompletionHandler
 		{
 			case TNull: null;
 			case TInt: "Int";
+			#if haxe5
 			case TInt64: "Int64";
+			#end
 			case TFloat: "Float";
 			case TBool: "Bool";
 			case TObject: "Object";
