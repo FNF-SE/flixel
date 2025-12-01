@@ -392,6 +392,7 @@ class BitmapFrontEnd
 	}
 
 	#if !flash
+	@:allow(flixel.FlxG)
 	function get_maxTextureSize():Int
 	{
 		return cast GL.getParameter(GL.MAX_TEXTURE_SIZE);
