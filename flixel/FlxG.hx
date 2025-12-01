@@ -638,6 +638,10 @@ class FlxG
 		FlxG.height = height;
 
 		initRenderMethod();
+		#if !flash
+		// Query once when window is created and cache for later
+		bitmap.get_maxTextureSize();
+		#end
 
 		FlxG.initialWidth = width;
 		FlxG.initialHeight = height;
