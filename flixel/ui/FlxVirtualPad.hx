@@ -44,7 +44,7 @@ class FlxVirtualPad extends FlxSpriteGroup
 	public function new(?DPad:FlxDPadMode, ?Action:FlxActionMode)
 	{
 		super();
-		scrollFactor.set();
+		scrollFactor.zero();
 
 		if (DPad == null)
 			DPad = FULL;
@@ -52,10 +52,10 @@ class FlxVirtualPad extends FlxSpriteGroup
 			Action = A_B_C;
 
 		dPad = new FlxSpriteGroup();
-		dPad.scrollFactor.set();
+		dPad.scrollFactor.zero();
 
 		actions = new FlxSpriteGroup();
-		actions.scrollFactor.set();
+		actions.scrollFactor.zero();
 
 		switch (DPad)
 		{
@@ -134,7 +134,7 @@ class FlxVirtualPad extends FlxSpriteGroup
 		button.resetSizeFromFrame();
 		button.solid = false;
 		button.immovable = true;
-		button.scrollFactor.set();
+		button.scrollFactor.zero();
 
 		#if FLX_DEBUG
 		button.ignoreDrawDebug = true;

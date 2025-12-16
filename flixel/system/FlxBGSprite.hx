@@ -11,7 +11,7 @@ class FlxBGSprite extends FlxSprite
 	{
 		super();
 		makeGraphic(1, 1, FlxColor.WHITE, true, FlxG.bitmap.getUniqueKey("bg_graphic_"));
-		scrollFactor.set();
+		scrollFactor.zero();
 	}
 
 	/**

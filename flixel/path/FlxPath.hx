@@ -382,7 +382,7 @@ class FlxPath implements IFlxDestroyable
 			}
 			else
 			{
-				object.velocity.set();
+				object.velocity.zero();
 			}
 
 			// then set object rotation if necessary
@@ -548,7 +548,7 @@ class FlxPath implements IFlxDestroyable
 
 		if (object != null)
 		{
-			object.velocity.set(0, 0);
+			object.velocity.zero();
 		}
 		return this;
 	}

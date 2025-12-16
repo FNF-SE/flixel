@@ -142,7 +142,7 @@ class FlxDrawTrianglesItem extends FlxDrawBaseItem<FlxDrawTrianglesItem>
 			?cameraBounds:FlxRect #if !flash , ?transform:ColorTransform #end):Void
 	{
 		if (position == null)
-			position = point.set();
+			position = point.zero();
 
 		if (cameraBounds == null)
 			cameraBounds = rect.set(0, 0, FlxG.width, FlxG.height);

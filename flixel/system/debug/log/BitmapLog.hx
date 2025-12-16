@@ -226,7 +226,7 @@ class BitmapLog extends Window
 	inline function resetSettings():Void
 	{
 		zoom = 1;
-		_curMouseOffset.set();
+		_curMouseOffset.zero();
 	}
 
 	/**

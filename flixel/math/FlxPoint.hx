@@ -302,17 +302,48 @@ import openfl.geom.Point;
 		this = new FlxBasePoint(x, y);
 	}
 
+	
+	/**
+	 * Set the coordinates of this point object.
+	 *
+	 * @param   n  The X and Y coordinate of the point in space.
+	 */
+	public inline function setXY(n:Float):FlxPoint
+	{
+		return set(n, n);
+	}
+
 	/**
 	 * Set the coordinates of this point object.
 	 *
 	 * @param   x  The X-coordinate of the point in space.
 	 * @param   y  The Y-coordinate of the point in space.
 	 */
-	public inline function set(x:Float = 0, y:Float = 0):FlxPoint
+	overload public inline extern function set(x:Float, y:Float):FlxPoint
 	{
 		this.x = x;
 		this.y = y;
 		return this;
+	}
+
+	/**
+	 * Sets the x coordinate of this point and zeroes the y coordinate.
+	 *
+	 * @param   x  The X-coordinate of the point in space.
+	 */
+	@:deprecated("set(n) with one arg, is deprecated, use the two-arged set(n, 0), instead") // 6.2.0
+	overload public inline extern function set(x:Float):FlxPoint
+	{
+		return set(x, 0);
+	}
+	
+	/**
+	 * Set the coordinates of this point to zero.
+	 */
+	@:deprecated("set() with no args, is deprecated, use the two-arged set(0, 0), setXY(0) or zero(), instead")
+	overload public inline extern function set():FlxPoint
+	{
+		return set(0, 0);
 	}
 
 	/**
@@ -1488,7 +1519,7 @@ class FlxBasePoint implements IFlxPooled
 	{
 		set(x, y);
 	}
-
+	
 	/**
 	 * Set the coordinates of this point object.
 	 *
@@ -1501,7 +1532,7 @@ class FlxBasePoint implements IFlxPooled
 		this.y = y;
 		return this;
 	}
-
+	
 	/**
 	 * Add this FlxBasePoint to the recycling pool.
 	 */
@@ -1608,7 +1639,7 @@ class FlxCallbackPoint extends FlxBasePoint
 		}
 	}
 
-	override public function set(x:Float = 0, y:Float = 0):FlxCallbackPoint
+	override function set(x:Float = 0, y:Float = 0)
 	{
 		super.set(x, y);
 		if (_setXYCallback != null)
