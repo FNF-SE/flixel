@@ -736,6 +736,9 @@ class FlxAnimationController implements IFlxDestroyable
 
 	function findByPrefix(animFrames:Array<FlxFrame>, prefix:String, logError = true):Void
 	{
+		if (_sprite.frames == null || _sprite.frames.frames == null)
+			return;
+
 		for (frame in _sprite.frames.frames)
 		{
 			if (frame.name != null && frame.name.startsWith(prefix))
