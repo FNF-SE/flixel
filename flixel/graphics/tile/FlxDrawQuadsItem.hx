@@ -3,15 +3,15 @@ package flixel.graphics.tile;
 import flixel.FlxCamera;
 import flixel.graphics.frames.FlxFrame;
 import flixel.graphics.tile.FlxDrawBaseItem.FlxDrawItemType;
-import flixel.system.FlxAssets.FlxShader;
 import flixel.math.FlxMatrix;
-import openfl.geom.ColorTransform;
-import openfl.display.ShaderParameter;
+import flixel.system.FlxAssets.FlxShader;
 import openfl.Vector;
+import openfl.display.ShaderParameter;
+import openfl.geom.ColorTransform;
 
 class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem>
 {
-	static inline var VERTICES_PER_QUAD = #if (openfl >= "8.5.0") 4 #else 6 #end;
+	static inline var VERTICES_PER_QUAD = 4;
 
 	public var shader:FlxShader;
 
@@ -129,19 +129,14 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem>
 			shader.colorMultiplier.value = colorMultipliers;
 			shader.colorOffset.value = colorOffsets;
 		}
-		final premultiplyAlpha:Bool = !graphics.bitmap.readable /*&& graphics.bitmap.__texture != null && graphics.bitmap.__texture.__premultiplyAlpha*/;
-		if (shader.premultiplyAlpha != null)
-			shader.premultiplyAlpha.value = [premultiplyAlpha];
 
 		setParameterValue(shader.hasTransform, true);
 		setParameterValue(shader.hasColorTransform, colored || hasColorOffsets);
-		//setParameterValue(shader.premultiplyAlpha, !shader.bitmap.input.readable && shader.bitmap.input.__texture != null && shader.bitmap.input.__texture.__premultiplyAlpha);
 
-		#if (openfl > "8.7.0")
 		camera.canvas.graphics.overrideBlendMode(blend);
-		#end
 		camera.canvas.graphics.beginShaderFill(shader);
 		camera.canvas.graphics.drawQuads(rects, null, transforms);
+		camera.canvas.graphics.endFill();
 		super.render(camera);
 	}
 

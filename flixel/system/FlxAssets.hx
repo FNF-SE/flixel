@@ -1,10 +1,8 @@
 package flixel.system;
 
+import haxe.io.Path;
 import haxe.macro.Expr;
 #if !macro
-import openfl.display.BitmapData;
-import openfl.display.Graphics;
-import openfl.media.Sound;
 import flixel.FlxG;
 import flixel.graphics.FlxGraphic;
 import flixel.graphics.atlas.AseAtlas;
@@ -13,13 +11,16 @@ import flixel.graphics.frames.FlxAtlasFrames;
 import flixel.graphics.frames.FlxFrame;
 import flixel.graphics.frames.FlxFramesCollection;
 import flixel.graphics.frames.bmfont.BMFont;
+import flixel.system.frontEnds.AssetFrontEnd;
 import flixel.util.typeLimit.OneOfFour;
 import flixel.util.typeLimit.OneOfThree;
 import flixel.util.typeLimit.OneOfTwo;
-import haxe.io.Bytes;
 import haxe.Json;
+import haxe.io.Bytes;
 import haxe.xml.Access;
-import openfl.Assets;
+import openfl.display.BitmapData;
+import openfl.display.Graphics;
+import openfl.media.Sound;
 import openfl.utils.ByteArray;
 
 using StringTools;
@@ -31,15 +32,24 @@ class GraphicLogo extends BitmapData {}
 class GraphicVirtualInput extends BitmapData {}
 
 @:file("assets/images/ui/virtual-input.txt")
-class VirtualInputData extends #if (lime_legacy || nme) ByteArray #else ByteArrayData #end {}
+class VirtualInputData extends #if nme ByteArray #else ByteArrayData #end {}
 
 typedef FlxTexturePackerJsonAsset = FlxJsonAsset<TexturePackerAtlas>;
 typedef FlxAsepriteJsonAsset = FlxJsonAsset<AseAtlas>;
-typedef FlxSoundAsset = OneOfThree<String, Sound, Class<Sound>>;
-typedef FlxGraphicAsset = OneOfThree<FlxGraphic, BitmapData, String>;
-typedef FlxGraphicSource = OneOfThree<BitmapData, Class<Dynamic>, String>;
+typedef FlxSoundAsset = OneOfFour<String, Sound, Class<Sound>, ByteArray>;
 typedef FlxTilemapGraphicAsset = OneOfFour<FlxFramesCollection, FlxGraphic, BitmapData, String>;
 typedef FlxBitmapFontGraphicAsset = OneOfFour<FlxFrame, FlxGraphic, BitmapData, String>;
+
+abstract FlxGraphicAsset(OneOfFour<FlxGraphic, BitmapData, String, Class<Dynamic>>) from FlxGraphic to FlxGraphic from BitmapData to BitmapData from String to String from Class<Dynamic> to Class<Dynamic>
+{
+	public inline function resolveBitmapData():BitmapData
+	{
+		return FlxAssets.resolveBitmapData(cast this);
+	}
+}
+
+@:deprecated("`FlxGraphicSource` is deprecated, use `FlxGraphicAsset` instead")
+typedef FlxGraphicSource = FlxGraphicAsset;
 
 abstract FlxAngelCodeAsset(OneOfThree<Xml, String, Bytes>) from Xml from String from Bytes
 {
@@ -49,15 +59,8 @@ abstract FlxAngelCodeAsset(OneOfThree<Xml, String, Bytes>) from Xml from String 
 	}
 }
 
-
-@:deprecated("`FlxAngelCodeXmlAsset` is deprecated, use `FlxAngelCodeAsset` instead")
+@:deprecated("`FlxAngelCodeXmlAsset` is deprecated, use `FlxAngelCodeAsset` instead")// 5.6.0
 typedef FlxAngelCodeXmlAsset = FlxAngelCodeAsset;
-
-@:deprecated("`FlxAngelCodeSource` is deprecated, use `FlxAngelCodeAsset` instead")
-typedef FlxAngelCodeSource = FlxAngelCodeAsset;
-
-@:deprecated("`FlxTexturePackerSource` is deprecated, use `FlxAtlasDataAsset` instead")
-typedef FlxTexturePackerSource = FlxTexturePackerJsonAsset;
 
 abstract FlxXmlAsset(OneOfTwo<Xml, String>) from Xml from String
 {
@@ -66,7 +69,7 @@ abstract FlxXmlAsset(OneOfTwo<Xml, String>) from Xml from String
 		if ((this is String))
 		{
 			final str:String = cast this;
-			if (Assets.exists(str))
+			if (FlxG.assets.exists(str))
 				return fromPath(str);
 
 			return fromXmlString(str);
@@ -77,12 +80,12 @@ abstract FlxXmlAsset(OneOfTwo<Xml, String>) from Xml from String
 
 	static inline function fromPath<T>(path:String):Xml
 	{
-		return fromXmlString(Assets.getText(path));
+		return FlxG.assets.getXmlUnsafe(path);
 	}
 
 	static inline function fromXmlString<T>(data:String):Xml
 	{
-		return Xml.parse(data);
+		return FlxG.assets.parseXml(data);
 	}
 }
 
@@ -93,7 +96,7 @@ abstract FlxJsonAsset<T>(OneOfTwo<T, String>) from T from String
 		if ((this is String))
 		{
 			final str:String = cast this;
-			if (Assets.exists(str))
+			if (FlxG.assets.exists(str))
 				return fromPath(str);
 
 			return fromDataString(str);
@@ -104,12 +107,12 @@ abstract FlxJsonAsset<T>(OneOfTwo<T, String>) from T from String
 
 	static inline function fromPath<T>(path:String):T
 	{
-		return fromDataString(Assets.getText(path));
+		return cast FlxG.assets.getJsonUnsafe(path);
 	}
 
 	static inline function fromDataString<T>(data:String):T
 	{
-		return cast Json.parse(data);
+		return cast FlxG.assets.parseJson(data);
 	}
 }
 
@@ -272,20 +275,22 @@ class FlxAssets
 		graph.lineTo(100, 100);
 		graph.endFill();
 	}
-
+	
+	/**
+	 * Gets an instance of a bitmap, logs when the asset is not found.
+	 * @param   id  The ID or asset path for the bitmap
+	 * @return  A new BitmapData object
+	**/
 	public static inline function getBitmapData(id:String):BitmapData
 	{
-		if (Assets.exists(id))
-			return Assets.getBitmapData(id, true);
-		FlxG.log.error('Could not find a BitmapData asset with ID \'$id\'.');
-		return null;
+		return FlxG.assets.getBitmapData(id);
 	}
 
 	/**
 	 * Generates BitmapData from specified class. Less typing.
 	 *
-	 * @param	source	BitmapData class to generate BitmapData object from.
-	 * @return	Newly instantiated BitmapData object.
+	 * @param   source  BitmapData class to generate BitmapData object from.
+	 * @return  Newly instantiated BitmapData object.
 	 */
 	public static inline function getBitmapFromClass(source:Class<Dynamic>):BitmapData
 	{
@@ -299,22 +304,26 @@ class FlxAssets
 	 * 3) if the input is String, then it will get BitmapData from openfl.Assets;
 	 * 4) it will return null in any other case.
 	 *
-	 * @param	Graphic	input data to get BitmapData object for.
-	 * @return	BitmapData for specified Dynamic object.
+	 * @param   graphic  input data to get BitmapData object for.
+	 * @return  BitmapData for specified Dynamic object.
 	 */
-	public static function resolveBitmapData(Graphic:FlxGraphicSource):BitmapData
+	public static function resolveBitmapData(graphic:FlxGraphicAsset):BitmapData
 	{
-		if ((Graphic is BitmapData))
+		if ((graphic is FlxGraphic))
 		{
-			return cast Graphic;
+			return cast(graphic, FlxGraphic).bitmap;
 		}
-		else if ((Graphic is Class))
+		else if ((graphic is BitmapData))
 		{
-			return FlxAssets.getBitmapFromClass(cast Graphic);
+			return cast graphic;
 		}
-		else if ((Graphic is String))
+		else if ((graphic is Class))
 		{
-			return FlxAssets.getBitmapData(Graphic);
+			return getBitmapFromClass(cast graphic);
+		}
+		else if ((graphic is String))
+		{
+			return FlxG.assets.getBitmapData(cast graphic);
 		}
 
 		return null;
@@ -327,30 +336,32 @@ class FlxAssets
 	 * 3) if the input is String, then it will return it;
 	 * 4) it will return null in any other case.
 	 *
-	 * @param	Graphic	input data to get string key for.
-	 * @param	Key	optional key string.
-	 * @return	Key String for specified Graphic object.
+	 * @param   graphic  input data to get string key for.
+	 * @param   key      optional key string.
+	 * @return  Key String for specified Graphic object.
 	 */
-	public static function resolveKey(Graphic:FlxGraphicSource, ?Key:String):String
+	public static function resolveKey(graphic:FlxGraphicAsset, ?key:String):String
 	{
-		if (Key != null)
+		if (key != null)
+			return key;
+		
+		if ((graphic is FlxGraphic))
 		{
-			return Key;
+			return cast(graphic, FlxGraphic).key;
 		}
-
-		if ((Graphic is BitmapData))
+		else if ((graphic is BitmapData))
 		{
-			return Key;
+			return key;
 		}
-		else if ((Graphic is Class))
+		else if ((graphic is Class))
 		{
-			return FlxG.bitmap.getKeyForClass(cast Graphic);
+			return FlxG.bitmap.getKeyForClass(cast graphic);
 		}
-		else if ((Graphic is String))
+		else if ((graphic is String))
 		{
-			return Graphic;
+			return cast graphic;
 		}
-
+		
 		return null;
 	}
 
@@ -361,12 +372,28 @@ class FlxAssets
 	 * @param   id  The asset id of the local sound file.
 	 * @return  The sound file.
 	 */
-	public static function getSound(id:String):Sound
+	@:deprecated("FlxAssets.getSound is deprecated, use getSoundAddExtension, instead")
+	public static inline function getSound(id:String):Sound
 	{
-		if (!id.endsWith(".mp3") && !id.endsWith(".ogg") && !id.endsWith(".wav"))
+		return getSoundAddExtension(id);
+	}
+	
+	/**
+	 * Loads an OpenFL sound asset from the given asset id. If an extension not provided the 
+	 * `defaultSoundExtension` is used (defaults to "ogg" on non-flash targets).
+	 * 
+	 * @param   id  The asset id of the local sound file.
+	 * @return  The sound file.
+	 * 
+	 * @since 5.9.0
+	 */
+	public static function getSoundAddExtension(id:String, useCache = true):Sound
+	{
+		final needsExt = Path.extension(id).length == 0;
+		if (needsExt)
 			id += "." + defaultSoundExtension;
 
-		return Assets.getSound(id);
+		return FlxG.assets.getSoundUnsafe(id, useCache);
 	}
 
 	public static function getVirtualInputFrames():FlxAtlasFrames

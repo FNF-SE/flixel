@@ -1,17 +1,19 @@
 package flixel.system.macros;
 
 #if macro
+import haxe.io.Path;
 import haxe.macro.Compiler;
 import haxe.macro.Context;
 import haxe.macro.Expr.Position;
+
+using StringTools;
 #if (flixel_addons >= "3.2.2")
 import flixel.addons.system.macros.FlxAddonDefines;
 #end
 
 
-using StringTools;
 
-private enum UserDefines
+private enum UserDefine
 {
 	FLX_NO_MOUSE_ADVANCED;
 	FLX_NO_GAMEPAD;
@@ -38,6 +40,20 @@ private enum UserDefines
 	FLX_NO_POINT_POOL;
 	FLX_NO_PITCH;
 	FLX_NO_SAVE;
+	/**
+	 * Loads from the specified relative or absolute directory. Unlike other boolean flags,
+	 * this flag should contain a string value.
+	 * 
+	 * **Note:** When using assets entirely from outside the build directory, it is wise to disable
+	 * any `</asset>` tags in your project.xml, to reduce your total memory
+	 */
+	FLX_CUSTOM_ASSETS_DIRECTORY;
+	/**
+	 * Allows you to use sound paths with no extension, and the default sound type for that
+	 * target will be used. If enabled it will use ogg on all targets except flash, which uses mp3.
+	 * If this flag is set to any string, that is used for the file extension
+	 */
+	FLX_DEFAULT_SOUND_EXT;
 }
 
 /**
@@ -45,14 +61,13 @@ private enum UserDefines
  * are shortened into a single define to avoid the redundancy
  * that comes with using them frequently.
  */
-private enum HelperDefines
+private enum HelperDefine
 {
 	FLX_GAMEPAD;
 	FLX_MOUSE;
 	FLX_TOUCH;
 	FLX_KEYBOARD;
 	FLX_SOUND_SYSTEM;
-	FLX_STREAM_SOUND;
 	FLX_FOCUS_LOST_SCREEN;
 	FLX_DEBUG;
 	FLX_STEAMWRAP;
@@ -80,6 +95,13 @@ private enum HelperDefines
 	/* Used in HaxeFlixel CI, should have no effect on personal projects */
 	FLX_NO_CI;
 	FLX_SAVE;
+	/** Defined to `1`(or `true`) if `FLX_CUSTOM_ASSETS_DIRECTORY` is not defined */
+	FLX_STANDARD_ASSETS_DIRECTORY;
+	/** The normalized, absolute path of `FLX_CUSTOM_ASSETS_DIRECTORY`, used internally */
+	FLX_CUSTOM_ASSETS_DIRECTORY_ABS;
+	FLX_NO_DEFAULT_SOUND_EXT;
+	/** Enables audio streaming related APIs */
+	FLX_STREAM_SOUND;
 }
 
 class FlxDefines
@@ -94,10 +116,13 @@ class FlxDefines
 		#end
 		
 		defineInversions();
-		defineHelperDefines();
+		defineHelperDefine();
 		
 		#if (flixel_addons >= "3.2.2")
 		flixel.addons.system.macros.FlxAddonDefines.run();
+		#end
+		#if (flixel_ui >= "2.6.0")
+		flixel.addons.ui.system.macros.FlxUIDefines.run();
 		#end
 	}
 
@@ -111,18 +136,21 @@ class FlxDefines
 		checkOpenFLVersions();
 		#end
 		
-		#if (flixel_addons < "3.0.2")
+		#if (flixel_addons < version("3.0.2"))
 		abortVersion("Flixel Addons", "3.0.2 or newer", "flixel-addons", (macro null).pos);
+		#end
+		#if (flixel_ui < version("2.6.0"))
+		abortVersion("Flixel UI", "2.6.0 or newer", "flixel_ui", (macro null).pos);
 		#end
 	}
 
 	static function checkOpenFLVersions()
 	{
-		#if (lime < "8.0.2")
+		#if (lime < version("8.0.2"))
 		abortVersion("Lime", "8.0.2 or newer", "lime", (macro null).pos);
 		#end
 
-		#if (openfl < "9.2.2")
+		#if (openfl < version("9.2.2"))
 		abortVersion("OpenFL", "9.2.2 or newer", "openfl", (macro null).pos);
 		#end
 	}
@@ -134,7 +162,7 @@ class FlxDefines
 
 	static function checkDefines()
 	{
-		for (define in HelperDefines.getConstructors())
+		for (define in HelperDefine.getConstructors())
 			abortIfDefined(define);
 
 		for (define in Context.getDefines().keys())
@@ -146,7 +174,7 @@ class FlxDefines
 		}
 	}
 	
-	static var userDefinable = UserDefines.getConstructors();
+	static var userDefinable = UserDefine.getConstructors();
 	static function isValidUserDefine(define:String)
 	{
 		return (define.startsWith("FLX_") && userDefinable.indexOf(define) == -1)
@@ -172,9 +200,10 @@ class FlxDefines
 		defineInversion(FLX_UNIT_TEST, FLX_NO_UNIT_TEST);
 		defineInversion(FLX_COVERAGE_TEST, FLX_NO_COVERAGE_TEST);
 		defineInversion(FLX_SWF_VERSION_TEST, FLX_NO_SWF_VERSION_TEST);
+		defineInversion(FLX_DEFAULT_SOUND_EXT, FLX_NO_DEFAULT_SOUND_EXT);
 	}
 
-	static function defineHelperDefines()
+	static function defineHelperDefine()
 	{
 		if (defined(FLX_UNIT_TEST) || defined(FLX_COVERAGE_TEST) || defined(FLX_SWF_VERSION_TEST))
 			define(FLX_CI);
@@ -190,12 +219,8 @@ class FlxDefines
 		if (!defined(FLX_NO_SOUND_SYSTEM) && !defined(FLX_NO_SOUND_TRAY))
 			define(FLX_SOUND_TRAY);
 
-		#if (lime >= "8.0.0")
 		if (defined(FLX_NO_SOUND_SYSTEM) || defined("flash"))
 			define(FLX_NO_PITCH);
-		#else
-		define(FLX_NO_PITCH);
-		#end
 
 		if (!defined(FLX_NO_PITCH))
 			define(FLX_PITCH);
@@ -233,9 +258,36 @@ class FlxDefines
 		// should always be defined as of 5.5.1 and, therefore, deprecated
 		define(FLX_DRAW_QUADS);
 		// #end
+
+		if (defined(FLX_CUSTOM_ASSETS_DIRECTORY))
+		{
+			if (!defined("sys"))
+			{
+				abort('FLX_CUSTOM_ASSETS_DIRECTORY is only available on sys targets', (macro null).pos);
+			}
+			else
+			{
+				// Todo: check sys targets
+				final rawDirectory = Path.normalize(definedValue(FLX_CUSTOM_ASSETS_DIRECTORY));
+				final directory = Path.normalize(rawDirectory);
+				final absPath = sys.FileSystem.absolutePath(directory);
+				if (!sys.FileSystem.isDirectory(directory) || directory == "1")
+				{
+					abort('FLX_CUSTOM_ASSETS_DIRECTORY must be a path to a directory, got "$rawDirectory"'
+						+ '\nabsolute path: $absPath', (macro null).pos);
+				}
+				define(FLX_CUSTOM_ASSETS_DIRECTORY_ABS, absPath);
+			}
+		}
+		else // define boolean inversion
+			define(FLX_STANDARD_ASSETS_DIRECTORY);
+
+		#if lime_vorbis
+		define(FLX_STREAM_SOUND);
+		#end
 	}
 
-	static function defineInversion(userDefine:UserDefines, invertedDefine:HelperDefines)
+	static function defineInversion(userDefine:UserDefine, invertedDefine:HelperDefine)
 	{
 		if (!defined(userDefine))
 			define(invertedDefine);
@@ -251,7 +303,7 @@ class FlxDefines
 		swfVersionError("Gamepad input is", "11.8", FLX_NO_GAMEPAD);
 	}
 
-	static function swfVersionError(feature:String, version:String, define:UserDefines)
+	static function swfVersionError(feature:String, version:String, define:UserDefine)
 	{
 		var errorMessage = '$feature only supported in Flash Player version $version or higher. '
 			+ 'Define ${define.getName()} to disable this feature or add <set name="SWF_VERSION" value="$version" /> to your Project.xml.';
@@ -260,14 +312,19 @@ class FlxDefines
 			abort(errorMessage, (macro null).pos);
 	}
 
+	static inline function definedValue(define:Dynamic):String
+	{
+		return Context.definedValue(Std.string(define));
+	}
+	
 	static inline function defined(define:Dynamic)
 	{
 		return Context.defined(Std.string(define));
 	}
 
-	static inline function define(define:Dynamic)
+	static inline function define(define:Dynamic, ?value:String)
 	{
-		Compiler.define(Std.string(define));
+		Compiler.define(Std.string(define), value);
 	}
 
 	static function abort(message:String, pos:Position)
