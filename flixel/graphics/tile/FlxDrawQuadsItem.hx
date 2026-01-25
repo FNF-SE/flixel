@@ -129,9 +129,13 @@ class FlxDrawQuadsItem extends FlxDrawBaseItem<FlxDrawQuadsItem>
 			shader.colorMultiplier.value = colorMultipliers;
 			shader.colorOffset.value = colorOffsets;
 		}
+		final premultiplyAlpha:Bool = !graphics.bitmap.readable /*&& graphics.bitmap.__texture != null && graphics.bitmap.__texture.__premultiplyAlpha*/;
+		if (shader.premultiplyAlpha != null)
+			shader.premultiplyAlpha.value = [premultiplyAlpha];
 
 		setParameterValue(shader.hasTransform, true);
 		setParameterValue(shader.hasColorTransform, colored || hasColorOffsets);
+		//setParameterValue(shader.premultiplyAlpha, !shader.bitmap.input.readable && shader.bitmap.input.__texture != null && shader.bitmap.input.__texture.__premultiplyAlpha);
 
 		camera.canvas.graphics.overrideBlendMode(blend);
 		camera.canvas.graphics.beginShaderFill(shader);
